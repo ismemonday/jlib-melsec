@@ -1,5 +1,8 @@
 package org.mgd.data;
 
+import org.mgd.Mc;
+import org.mgd.utils.DataUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -217,13 +220,17 @@ public abstract class McMessage implements Message {
         return this;
     }
 
-    public McMessage(byte[] FRAME_HEADER, byte[] FRAME_ADDRESS_NETWORK_NO, byte[] FRAME_ADDRESS_CONTROLLER_NO, byte[] FRAME_ADDRESS_DEST_MODULE_NO, byte[] FRAME_ADDRESS_DEST_MODULE_STATION, byte[] FRAME_REQUEST_DATA_LENGTH, byte[] FRAME_WATCH_TIMER, byte[] FRAME_REQUEST_COMMAND, byte[] FRAME_REQUEST_COMMAND_SON, byte[] FRAME_REQUEST_START_SOFT_ADDRESS, byte[] FRAME_REQUEST_SOFT_UNIT_CODE, byte[] FRAME_REQUEST_SOFT_UNIT_POINT, byte[] FRAME_REQUEST_SOFT_UNIT_POINT_DATA, byte[] FRAME_OVER_CODE, byte[] FRAME_RESP_DATA, byte[] FRAME_ERROR_DATA) {
+
+    public McMessage(){
+
+    }
+
+    public McMessage(byte[] FRAME_HEADER, byte[] FRAME_ADDRESS_NETWORK_NO, byte[] FRAME_ADDRESS_CONTROLLER_NO, byte[] FRAME_ADDRESS_DEST_MODULE_NO, byte[] FRAME_ADDRESS_DEST_MODULE_STATION, byte[] FRAME_WATCH_TIMER, byte[] FRAME_REQUEST_COMMAND, byte[] FRAME_REQUEST_COMMAND_SON, byte[] FRAME_REQUEST_START_SOFT_ADDRESS, byte[] FRAME_REQUEST_SOFT_UNIT_CODE, byte[] FRAME_REQUEST_SOFT_UNIT_POINT, byte[] FRAME_REQUEST_SOFT_UNIT_POINT_DATA, byte[] FRAME_OVER_CODE, byte[] FRAME_RESP_DATA, byte[] FRAME_ERROR_DATA) {
         this.FRAME_HEADER = FRAME_HEADER;
         this.FRAME_ADDRESS_NETWORK_NO = FRAME_ADDRESS_NETWORK_NO;
         this.FRAME_ADDRESS_CONTROLLER_NO = FRAME_ADDRESS_CONTROLLER_NO;
         this.FRAME_ADDRESS_DEST_MODULE_NO = FRAME_ADDRESS_DEST_MODULE_NO;
         this.FRAME_ADDRESS_DEST_MODULE_STATION = FRAME_ADDRESS_DEST_MODULE_STATION;
-        this.FRAME_REQUEST_DATA_LENGTH = FRAME_REQUEST_DATA_LENGTH;
         this.FRAME_WATCH_TIMER = FRAME_WATCH_TIMER;
         this.FRAME_REQUEST_COMMAND = FRAME_REQUEST_COMMAND;
         this.FRAME_REQUEST_COMMAND_SON = FRAME_REQUEST_COMMAND_SON;
@@ -234,11 +241,8 @@ public abstract class McMessage implements Message {
         this.FRAME_OVER_CODE = FRAME_OVER_CODE;
         this.FRAME_RESP_DATA = FRAME_RESP_DATA;
         this.FRAME_ERROR_DATA = FRAME_ERROR_DATA;
+        countDataLength();
     }
-
-    public McMessage() {
-    }
-
 
     @Override
     public byte[] toByteArray() {
@@ -272,7 +276,10 @@ public abstract class McMessage implements Message {
      * 计算数据长
      */
     public void countDataLength() {
+        if(FRAME_REQUEST_SOFT_UNIT_POINT_DATA==null){
+            this.setFRAME_REQUEST_DATA_LENGTH(Mc.FRAME_DATA_LENGTH_3E_READ);
+        }else{
+            this.setFRAME_REQUEST_DATA_LENGTH(DataUtils.byteResolve(Mc.FRAME_DATA_LENGTH_3E_NO_DATA+FRAME_REQUEST_SOFT_UNIT_POINT_DATA.length,2));
+        }
     }
-
-    ;
 }

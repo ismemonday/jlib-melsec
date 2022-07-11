@@ -5,6 +5,7 @@ import org.mgd.data.McConnectParams;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,9 @@ public class McConnectTcp extends McConnect{
         if(!socket.isConnected()){
             socket.connect(new InetSocketAddress(params.getUrl(), params.getPort()));
         }
+        os.flush();
         socket.getOutputStream().write(os.toByteArray());
+        os.close();
     }
 
     @Override
@@ -37,7 +40,15 @@ public class McConnectTcp extends McConnect{
     }
 
     @Override
-    public ByteArrayInputStream waitResp(int i, TimeUnit seconds) {
-        return null;
+    public ByteArrayInputStream waitResp(int i, TimeUnit seconds) throws IOException {
+        byte[] bytes=new byte[256];
+        InputStream inputStream = socket.getInputStream();
+        inputStream.read(bytes);
+        return new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
     }
 }

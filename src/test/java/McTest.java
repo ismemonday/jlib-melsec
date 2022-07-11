@@ -16,13 +16,13 @@ public class McTest {
                 .setFRAME_ADDRESS_CONTROLLER_NO(new byte[]{(byte) 0XFF})
                 .setFRAME_ADDRESS_DEST_MODULE_NO(new byte[]{(byte) 0xFF,0X03})
                 .setFRAME_ADDRESS_DEST_MODULE_STATION(new byte[]{0x00})
-                .setFRAME_REQUEST_DATA_LENGTH(new byte[]{0x0C,00})
+                .setFRAME_REQUEST_DATA_LENGTH(new byte[]{0x10,00})
                 .setFRAME_WATCH_TIMER(new byte[]{0x10,00})
-                .setFRAME_REQUEST_COMMAND(new byte[]{0x01,0x04,00,00})
+                .setFRAME_REQUEST_COMMAND(new byte[]{0x01,0x14,00,00})
                 .setFRAME_REQUEST_START_SOFT_ADDRESS(new byte[]{0x58,0x1B,00})
                 .setFRAME_REQUEST_SOFT_UNIT_CODE(new byte[]{(byte) 0xA8})
-                .setFRAME_REQUEST_SOFT_UNIT_POINT(new byte[]{0x04,00});
-                //.setFRAME_REQUEST_SOFT_UNIT_POINT_DATA(new byte[]{0x0C,00});
+                .setFRAME_REQUEST_SOFT_UNIT_POINT(new byte[]{0x02,00})
+                .setFRAME_REQUEST_SOFT_UNIT_POINT_DATA(new byte[]{0x06,0X00,0X07,00});
         socket.getOutputStream().write(mcMessage.toByteArray());
         byte[] bytes = new byte[256];
         socket.getInputStream().read(bytes);

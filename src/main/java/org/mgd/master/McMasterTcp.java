@@ -5,10 +5,13 @@ import org.mgd.data.DataFrame;
 import org.mgd.data.McConnectParams;
 import org.mgd.data.McRequest;
 import org.mgd.data.McResponse;
+import org.mgd.data.enums.FrameErrorCodeEnum;
 import org.mgd.net.McConnectFactory;
-
+import org.mgd.utils.DataUtils;
+import org.mgd.utils.McAssert;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 
 /**
@@ -19,12 +22,40 @@ public class McMasterTcp extends McMaster{
 
     protected McMasterTcp( McConnectParams params,DataFrame frame) {
         super(frame);
-        McConnectFactory.createTcpConnect(params);
+        connect=McConnectFactory.createTcpConnect(params);
     }
 
     @Override
-    protected McResponse doResponseImpl(McRequest mcRequest) {
-        return null;
+    protected McResponse doResponseImpl(McRequest mcRequest) throws IOException {
+        McResponse response = mcRequest.getResponse();
+        try {
+            McAssert.noNull(response,"response data is null");
+            writeNormalData(mcRequest);
+        }catch (Exception e){
+            e.printStackTrace();
+            connect.close();
+        }
+        return response;
+    }
+
+    /**
+     * 填充常规数据
+     */
+    private void writeNormalData(McRequest request) throws IOException {
+        McResponse response = request.getResponse();
+        is.read(new byte[7]);
+        is.read(response.getFRAME_REQUEST_DATA_LENGTH());
+        is.read(response.getFRAME_OVER_CODE());
+        is.read(response.getFRAME_RESP_DATA());
+        byte[] frame_over_code = response.getFRAME_OVER_CODE();
+        response.setRespResult(true);
+        if (Arrays.equals(frame_over_code, FrameErrorCodeEnum.RESP_SUCCESS.getCode())) {
+            response.setCode(0);
+            response.setResultData(response.getFRAME_RESP_DATA());
+        }else {
+            response.setCode(-1);
+            response.setResultData(response.getFRAME_RESP_DATA());
+        }
     }
 
     @Override
@@ -46,9 +77,10 @@ public class McMasterTcp extends McMaster{
      * @throws IOException
      */
     private void writeFrameHeader(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
-        if(DataFrame.FRAME_3E.equals(frame)){
-            os.write(Mc.FRAME_HEADER_3E_REQUEST);
-        }
+        byte[] frame_header = mcRequest.getFRAME_HEADER();
+        mcRequest.getResponse().setFRAME_HEADER(Mc.FRAME_HEADER_3E_RESP);
+        McAssert.noNull(frame_header,"request data header is empty");
+        os.write(frame_header);
         writePostAddress(os,mcRequest);
     }
 
@@ -58,17 +90,24 @@ public class McMasterTcp extends McMaster{
      * @param mcRequest
      */
     private void writePostAddress(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
-        if(DataFrame.FRAME_3E.equals(frame)||DataFrame.FRAME_4E.equals(frame)){
-            //网络编号
-            os.write(mcRequest.getFRAME_ADDRESS_NETWORK_NO()==null?Mc.FRAME_ADDRESS_3E_4E_NETWORK_NO:mcRequest.getFRAME_ADDRESS_NETWORK_NO());
-            //可编程控制器编号
-            os.write(mcRequest.getFRAME_ADDRESS_CONTROLLER_NO()==null?Mc.FRAME_ADDRESS_3E_4E_CONTROLLER_NO:mcRequest.getFRAME_ADDRESS_CONTROLLER_NO());
-            //请求目标模块I/O编号
-            os.write(mcRequest.getFRAME_ADDRESS_DEST_MODULE_NO()==null?Mc.FRAME_ADDRESS_3E_4E_DEST_MODULE_NO:mcRequest.getFRAME_ADDRESS_DEST_MODULE_NO());
-            //请求目标模块站号
-            os.write(mcRequest.getFRAME_ADDRESS_DEST_MODULE_STATION()==null?Mc.FRAME_ADDRESS_3E_4E_DEST_MODULE_STATION:mcRequest.getFRAME_ADDRESS_DEST_MODULE_STATION());
-        }
-        writeDataLength(os,mcRequest);
+        McResponse response = mcRequest.getResponse();
+        byte[] frame_address_network_no = mcRequest.getFRAME_ADDRESS_NETWORK_NO();
+        McAssert.noNull(frame_address_network_no,"request data frame_address_network_no is empty");
+        response.setFRAME_ADDRESS_NETWORK_NO(frame_address_network_no);
+        os.write(frame_address_network_no);
+        byte[] frame_address_controller_no = mcRequest.getFRAME_ADDRESS_CONTROLLER_NO();
+        McAssert.noNull(frame_address_controller_no,"request data frame_address_controller_no is empty");
+        response.setFRAME_ADDRESS_CONTROLLER_NO(frame_address_controller_no);
+        os.write(frame_address_controller_no);
+        byte[] frame_address_dest_module_no = mcRequest.getFRAME_ADDRESS_DEST_MODULE_NO();
+        McAssert.noNull(frame_address_dest_module_no,"request data frame_address_dest_module_no is empty");
+        response.setFRAME_ADDRESS_DEST_MODULE_NO(frame_address_dest_module_no);
+        os.write(frame_address_dest_module_no);
+        byte[] frame_address_dest_module_station = mcRequest.getFRAME_ADDRESS_DEST_MODULE_STATION();
+        McAssert.noNull(frame_address_dest_module_station,"request data frame_address_dest_module_station is empty");
+        response.setFRAME_ADDRESS_DEST_MODULE_STATION(frame_address_dest_module_station);
+        os.write(frame_address_dest_module_station);
+        writeDataLength(os, mcRequest);
     }
 
     /**
@@ -78,9 +117,9 @@ public class McMasterTcp extends McMaster{
      */
     private void writeDataLength(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
         byte[] frame_request_data_length = mcRequest.getFRAME_REQUEST_DATA_LENGTH();
-        if(frame_request_data_length==null){
-            mcRequest.countDataLength();
-        }
+        McAssert.noNull(frame_request_data_length,"request data data_length is empty");
+        mcRequest.getResponse().setFRAME_REQUEST_DATA_LENGTH(DataUtils.byteResolve(mcRequest.getQuantity()*2+2, 2));
+        mcRequest.getResponse().setFRAME_OVER_CODE(FrameErrorCodeEnum.RESP_SUCCESS.getCode());
         os.write(frame_request_data_length);
         writeWatchTimer(os,mcRequest);
     }
@@ -91,7 +130,9 @@ public class McMasterTcp extends McMaster{
      * @param mcRequest
      */
     private void writeWatchTimer(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
-        os.write(mcRequest.getFRAME_WATCH_TIMER()==null?Mc.FRAME_WATCHER_TIMER:mcRequest.getFRAME_WATCH_TIMER());
+        byte[] frame_watch_timer = mcRequest.getFRAME_WATCH_TIMER();
+        McAssert.noNull(frame_watch_timer,"request data frame_watch_timer is empty");
+        os.write(frame_watch_timer);
         writeRequestData(os,mcRequest);
     }
 
@@ -100,7 +141,27 @@ public class McMasterTcp extends McMaster{
      * @param os
      * @param mcRequest
      */
-    private void writeRequestData(ByteArrayOutputStream os, McRequest mcRequest) {
-
+    private void writeRequestData(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
+        byte[] frame_request_command = mcRequest.getFRAME_REQUEST_COMMAND();
+        McAssert.noNull(frame_request_command,"request data frame_request_command is empty");
+        os.write(frame_request_command);
+        byte[] frame_request_command_son = mcRequest.getFRAME_REQUEST_COMMAND_SON();
+        if(frame_request_command_son!=null){
+            os.write(frame_request_command_son);
+        }
+        byte[] frame_request_start_soft_address = mcRequest.getFRAME_REQUEST_START_SOFT_ADDRESS();
+        McAssert.noNull(frame_request_start_soft_address,"request data frame_request_start_soft_address is empty");
+        os.write(frame_request_start_soft_address);
+        byte[] frame_request_soft_unit_code = mcRequest.getFRAME_REQUEST_SOFT_UNIT_CODE();
+        McAssert.noNull(frame_request_soft_unit_code,"request data frame_request_soft_unit_code is empty");
+        os.write(frame_request_soft_unit_code);
+        byte[] frame_request_soft_unit_point = mcRequest.getFRAME_REQUEST_SOFT_UNIT_POINT();
+        McAssert.noNull(frame_request_soft_unit_point,"request data frame_request_soft_unit_point is empty");
+        os.write(frame_request_soft_unit_point);
+        byte[] frame_request_soft_unit_point_data = mcRequest.getFRAME_REQUEST_SOFT_UNIT_POINT_DATA();
+        if(frame_request_soft_unit_point_data!=null){
+            os.write(frame_request_soft_unit_point_data);
+        }
+        mcRequest.getResponse().setFRAME_RESP_DATA(new byte[mcRequest.getQuantity()*2]);
     }
 }

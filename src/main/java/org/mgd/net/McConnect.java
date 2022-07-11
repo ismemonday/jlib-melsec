@@ -38,7 +38,14 @@ public abstract class McConnect {
      * 等待响应
      * @param i
      * @param seconds
+     * @throws IOException
      * @return
      */
-    public abstract ByteArrayInputStream waitResp(int i, TimeUnit seconds);
+    public abstract ByteArrayInputStream waitResp(int i, TimeUnit seconds) throws IOException;
+
+    /**
+     * 关闭链接
+     * @throws IOException
+     */
+    public abstract void close() throws  IOException;
 }

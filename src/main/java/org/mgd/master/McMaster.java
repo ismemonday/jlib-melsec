@@ -1,8 +1,6 @@
 package org.mgd.master;
 
-import org.mgd.net.McConnectFactory;
 import org.mgd.data.DataFrame;
-import org.mgd.data.McConnectParams;
 import org.mgd.data.McRequest;
 import org.mgd.data.McResponse;
 import org.mgd.net.McConnect;
@@ -10,7 +8,6 @@ import org.mgd.net.McConnect;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author mgd [maoguidong@standard-robots.com]
@@ -42,7 +39,7 @@ public abstract class McMaster {
     protected McResponse doRequest(McRequest mcRequest) throws IOException {
            doRequestImpl(mcRequest);
            connect.doRequest(os);
-           is = connect.waitResp(1, TimeUnit.SECONDS);
+           is = connect.waitResp(mcRequest.getWaitRespTimeOut(),mcRequest.getWaitTimeOutUnit());
            return doResponseImpl(mcRequest);
     }
 
@@ -50,8 +47,9 @@ public abstract class McMaster {
      * 请求后的数据处理
      * @param mcRequest
      * @return
+     * @throws IOException
      */
-    protected abstract McResponse doResponseImpl(McRequest mcRequest);
+    protected abstract McResponse doResponseImpl(McRequest mcRequest) throws IOException;
 
 
     /**
@@ -63,6 +61,7 @@ public abstract class McMaster {
 
     /**
      * 链接
+     * @throws IOException
      */
     protected abstract void doConnect() throws IOException;
 }

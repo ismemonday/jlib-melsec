@@ -52,6 +52,16 @@ public class Mc {
      */
     public final static byte[] FRAME_DATA_WRITE_READ_STRING={0X0A,00};
     public final static byte FRAME_DATA_WRITE_READ_STRING_LENGTH=20;
+    /**
+     * 数据长
+     */
+    public final static byte[] FRAME_DATA_LENGTH_3E_READ={0X0C,00};
+    public final static byte[] FRAME_DATA_LENGTH_3E_WRITE={0X0E,00};
+    public static final int FRAME_DATA_LENGTH_3E_NO_DATA = 12;
+    /**
+     * 数据长,默认
+     */
+    public static final byte[] REQUEST_DATA_LENGTH_EMPTY = {00,00};
 
 
 
