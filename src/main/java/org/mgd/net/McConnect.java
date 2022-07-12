@@ -15,6 +15,8 @@ public abstract class McConnect {
 
     protected McConnectParams params;
 
+    protected volatile boolean isConnected=false;
+
     public McConnect(McConnectParams params) {
         this.params=params;
     }
@@ -48,4 +50,12 @@ public abstract class McConnect {
      * @throws IOException
      */
     public abstract void close() throws  IOException;
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
 }

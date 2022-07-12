@@ -67,7 +67,6 @@ public class McMasterTcp extends McMaster{
     @Override
     protected void doConnect() throws IOException {
         connect.connectImpl();
-        this.isConnected=true;
     }
 
     /**

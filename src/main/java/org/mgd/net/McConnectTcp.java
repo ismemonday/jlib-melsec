@@ -1,14 +1,18 @@
 package org.mgd.net;
 
 import org.mgd.data.McConnectParams;
+import org.mgd.exception.McException;
+import org.mgd.exception.McTimeOutException;
+import org.mgd.utils.DataUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author mgd [maoguidong@standard-robots.com]
@@ -16,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class McConnectTcp extends McConnect{
     private Socket socket;
+    private byte[] writeData;
 
     public McConnectTcp(McConnectParams params) {
         super(params);
@@ -26,8 +31,10 @@ public class McConnectTcp extends McConnect{
         if(!socket.isConnected()){
             socket.connect(new InetSocketAddress(params.getUrl(), params.getPort()));
         }
-        os.flush();
-        socket.getOutputStream().write(os.toByteArray());
+        writeData=os.toByteArray();
+        OutputStream soos = socket.getOutputStream();
+        soos.write(writeData);
+        soos.flush();
         os.close();
     }
 
@@ -37,18 +44,42 @@ public class McConnectTcp extends McConnect{
         socket.setKeepAlive(params.isKeepAlive());
         socket.setTcpNoDelay(true);
         socket.connect(new InetSocketAddress(params.getUrl(), params.getPort()));
+        isConnected=true;
     }
 
     @Override
-    public ByteArrayInputStream waitResp(int i, TimeUnit seconds) throws IOException {
+    public synchronized ByteArrayInputStream waitResp(int timeout, TimeUnit timeUnit) throws IOException {
         byte[] bytes=new byte[256];
+        if(!socket.isConnected()){
+            connectImpl();
+        }
         InputStream inputStream = socket.getInputStream();
-        inputStream.read(bytes);
-        return new ByteArrayInputStream(bytes);
+        FutureTask<Boolean> task = new FutureTask<Boolean>(() -> {
+            inputStream.read(bytes);
+            return true;
+        });
+        new Thread(task,"wait-resp-" + new Random().nextInt(100)).start();
+        try {
+            Boolean result = task.get(timeout, timeUnit);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            System.out.println(e);
+            throw new McException("请求数据异常:"+ DataUtils.byteToStr(writeData));
+        } catch (TimeoutException e) {
+            close();
+           throw new McTimeOutException("wait resp timeOut");
+        }
+        ByteArrayInputStream bains = new ByteArrayInputStream(bytes);
+        if (!params.isKeepAlive()) {
+           close();
+        }
+        return bains;
     }
 
     @Override
     public void close() throws IOException {
         socket.close();
+        isConnected=false;
     }
 }

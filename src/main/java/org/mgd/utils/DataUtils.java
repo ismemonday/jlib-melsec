@@ -41,5 +41,17 @@ public class DataUtils {
     }
 
 
+    public static String byteToStr(byte[] writeData) {
+        if(writeData==null){
+            return null;
+        }
+        StringBuilder stringBuilder = new StringBuilder("[");
+        for (byte writeDatum : writeData) {
+            stringBuilder.append(Integer.toHexString(writeDatum&0xff));
+            stringBuilder.append(",");
+        }
+        stringBuilder.append("]");
+        return stringBuilder.toString();
+    }
 
 }

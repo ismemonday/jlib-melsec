@@ -16,7 +16,6 @@ import java.io.IOException;
 public abstract class McMaster {
      final DataFrame frame;
      McConnect connect;
-     volatile boolean isConnected=false;
      ByteArrayOutputStream os;
      ByteArrayInputStream is;
 
@@ -30,7 +29,7 @@ public abstract class McMaster {
      * @return
      */
     public McResponse processRequest(McRequest mcRequest) throws IOException {
-        if(!isConnected){
+        if(!connect.isConnected()){
             doConnect();
         }
         return doRequest(mcRequest);

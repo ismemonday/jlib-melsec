@@ -84,7 +84,6 @@ final public class McRequest extends McMessage {
      * @return
      */
     public static McRequest writeWord(int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, byte[] value) {
-        byte[] bytes = new byte[value.length * 2];
         ByteArrayOutputStream dataArr = new ByteArrayOutputStream();
         for (byte b : value) {
             byte[] bytesa = DataUtils.byteResolve(b, 2);
