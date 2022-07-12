@@ -1,12 +1,12 @@
 import org.mgd.data.McConnectParams;
-import org.mgd.data.McRequest;
-import org.mgd.data.McResponse;
+import org.mgd.data.response.McResponse;
+import org.mgd.data.request.McWordRequest;
+import org.mgd.data.response.McWordResponse;
 import org.mgd.master.McMaster;
 import org.mgd.master.McMasterFactory;
 import org.mgd.utils.DataUtils;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author mgd [maoguidong@standard-robots.com]
@@ -15,13 +15,25 @@ import java.util.concurrent.TimeUnit;
 public class TcpTest {
     public static void main(String[] args) throws IOException {
         McMaster mcMaster = McMasterFactory.createMcMasterTcp(McConnectParams.build("10.10.68.72", 5002,true));
-        //字单位批量写入
-        McResponse response=mcMaster.processRequest(McRequest.writeWord(7000,10,TimeUnit.SECONDS,new byte[]{6,7}));
-        System.out.println("写入结果:"+response.getRespResult());
-        //字单位批量读取
-        McResponse resp2=mcMaster.processRequest(McRequest.readWord(7000,3, TimeUnit.SECONDS,2));
-        System.out.println("读取结果:"+resp2.getRespResult());
-        byte[] resultData = resp2.getResultData();
-        System.out.print("读取的值是:"+ DataUtils.byteToStr(resultData));
+        //字单位short批量操作
+        McResponse<Short> shortMcResponse1 = mcMaster.processRequest(McWordRequest.shortWrite(7000, new short[]{4, 5,6}));
+        System.out.println("写入结果:"+shortMcResponse1.getCode());
+        McResponse<Short> shortMcResponse = mcMaster.processRequest(McWordRequest.shortRead(7000, 3));
+        System.out.println("读取结果" + DataUtils.arrayToStr(shortMcResponse.getData()));
+        //字单位int批量操作
+        McResponse response12 = mcMaster.processRequest(McWordRequest.intWrite(7000, new int[]{6, 7}));
+        System.out.println("写入结果:"+response12.getCode());
+        McResponse<Integer> integerMcResponse = mcMaster.processRequest(McWordRequest.intRead(7000, 3));
+        System.out.println("读取结果" + DataUtils.arrayToStr(integerMcResponse.getData()));
+        //字单位float批量操作
+        McResponse response13 = mcMaster.processRequest(McWordRequest.floatWrite(7000, new float[]{8, 9}));
+        System.out.println("写入结果:"+response13.getCode());
+        McResponse<Float> floatMcResponse = mcMaster.processRequest(McWordRequest.floatRead(7000, 3));
+        System.out.println("读取结果" + DataUtils.arrayToStr(floatMcResponse.getData()));
+        //字单位long批量操作
+        McResponse response14 = mcMaster.processRequest(McWordRequest.longWrite(7000, new long[]{10,11}));
+        System.out.println("写入结果:" + response14.getCode());
+       McWordResponse<Long> longMcResponse = (McWordResponse<Long>) mcMaster.processRequest(McWordRequest.longRead(7000, 3));
+        System.out.println("读取结果" + DataUtils.arrayToStr(longMcResponse.getData()));
     }
 }

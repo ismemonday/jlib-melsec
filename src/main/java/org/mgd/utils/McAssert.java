@@ -19,4 +19,10 @@ public class McAssert {
             throw new McException(msg);
         }
     }
+
+    public static void isTrue(boolean b, String msg) {
+        if(!b){
+            throw new McException(msg);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package org.mgd.data;
 
 import org.mgd.Mc;
+import org.mgd.data.enums.WordLengthEnum;
 import org.mgd.utils.DataUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -282,4 +283,7 @@ public abstract class McMessage implements Message {
             this.setFRAME_REQUEST_DATA_LENGTH(DataUtils.byteResolve(Mc.FRAME_DATA_LENGTH_3E_NO_DATA+FRAME_REQUEST_SOFT_UNIT_POINT_DATA.length,2));
         }
     }
+
+    public abstract WordLengthEnum getWordLength();
+
 }

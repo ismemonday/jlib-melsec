@@ -1,16 +1,19 @@
 package org.mgd.master;
 
 import org.mgd.Mc;
-import org.mgd.data.DataFrame;
+import org.mgd.data.enums.DataFrame;
 import org.mgd.data.McConnectParams;
-import org.mgd.data.McRequest;
-import org.mgd.data.McResponse;
+import org.mgd.data.enums.WordLengthEnum;
+import org.mgd.data.request.McRequest;
+import org.mgd.data.response.McResponse;
 import org.mgd.data.enums.FrameErrorCodeEnum;
+import org.mgd.exception.McException;
 import org.mgd.net.McConnectFactory;
 import org.mgd.utils.DataUtils;
 import org.mgd.utils.McAssert;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 
@@ -41,22 +44,27 @@ public class McMasterTcp extends McMaster{
     /**
      * 填充常规数据
      */
-    private void writeNormalData(McRequest request) throws IOException {
+    private <T> void writeNormalData(McRequest request) throws IOException {
         McResponse response = request.getResponse();
         is.read(new byte[7]);
         is.read(response.getFRAME_REQUEST_DATA_LENGTH());
         is.read(response.getFRAME_OVER_CODE());
         is.read(response.getFRAME_RESP_DATA());
         byte[] frame_over_code = response.getFRAME_OVER_CODE();
-        response.setRespResult(true);
-        if (Arrays.equals(frame_over_code, FrameErrorCodeEnum.RESP_SUCCESS.getCode())) {
+        byte[] errorCode = DataUtils.byteResolve(frame_over_code);
+        if (Arrays.equals(errorCode, FrameErrorCodeEnum.RESP_SUCCESS.getCode())) {
             response.setCode(0);
-            response.setResultData(response.getFRAME_RESP_DATA());
         }else {
-            response.setCode(-1);
-            response.setResultData(response.getFRAME_RESP_DATA());
+            response.setCode((0xffff&errorCode[0]<<8)&errorCode[1]);
+            wrapRespMsg(response);
         }
+        response.wrapRespData(request.getWordLength(),request.getQuantity());
     }
+
+    private void wrapRespMsg(McResponse response) {
+        response.setMsg("响应失败");
+    }
+
 
     @Override
     protected void doRequestImpl(McRequest mcRequest) throws IOException {
@@ -117,7 +125,7 @@ public class McMasterTcp extends McMaster{
     private void writeDataLength(ByteArrayOutputStream os, McRequest mcRequest) throws IOException {
         byte[] frame_request_data_length = mcRequest.getFRAME_REQUEST_DATA_LENGTH();
         McAssert.noNull(frame_request_data_length,"request data data_length is empty");
-        mcRequest.getResponse().setFRAME_REQUEST_DATA_LENGTH(DataUtils.byteResolve(mcRequest.getQuantity()*2+2, 2));
+        mcRequest.getResponse().setFRAME_REQUEST_DATA_LENGTH(DataUtils.byteResolve(mcRequest.getQuantity()*mcRequest.getWordLength().getLength()+2, 2));
         mcRequest.getResponse().setFRAME_OVER_CODE(FrameErrorCodeEnum.RESP_SUCCESS.getCode());
         os.write(frame_request_data_length);
         writeWatchTimer(os,mcRequest);
@@ -161,6 +169,6 @@ public class McMasterTcp extends McMaster{
         if(frame_request_soft_unit_point_data!=null){
             os.write(frame_request_soft_unit_point_data);
         }
-        mcRequest.getResponse().setFRAME_RESP_DATA(new byte[mcRequest.getQuantity()*2]);
+        mcRequest.getResponse().setFRAME_RESP_DATA(new byte[mcRequest.getQuantity()*mcRequest.getWordLength().getLength()]);
     }
 }

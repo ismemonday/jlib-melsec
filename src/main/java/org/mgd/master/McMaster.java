@@ -1,8 +1,8 @@
 package org.mgd.master;
 
-import org.mgd.data.DataFrame;
-import org.mgd.data.McRequest;
-import org.mgd.data.McResponse;
+import org.mgd.data.enums.DataFrame;
+import org.mgd.data.request.McRequest;
+import org.mgd.data.response.McResponse;
 import org.mgd.net.McConnect;
 
 import java.io.ByteArrayInputStream;
@@ -13,7 +13,7 @@ import java.io.IOException;
  * @author mgd [maoguidong@standard-robots.com]
  * @data 2022/7/5 下午3:23
  */
-public abstract class McMaster {
+public abstract class McMaster{
      final DataFrame frame;
      McConnect connect;
      ByteArrayOutputStream os;
@@ -28,7 +28,7 @@ public abstract class McMaster {
      * @param mcRequest
      * @return
      */
-    public McResponse processRequest(McRequest mcRequest) throws IOException {
+    public <T> McResponse<T> processRequest(McRequest<T> mcRequest) throws IOException {
         if(!connect.isConnected()){
             doConnect();
         }

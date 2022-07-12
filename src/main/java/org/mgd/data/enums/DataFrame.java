@@ -1,4 +1,4 @@
-package org.mgd.data;
+package org.mgd.data.enums;
 
 /**
  * 数据帧

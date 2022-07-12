@@ -1,11 +1,11 @@
-package org.mgd.data;
+package org.mgd.data.request;
 
 import org.mgd.Mc;
+import org.mgd.data.McMessage;
+import org.mgd.data.response.McResponse;
 import org.mgd.data.enums.*;
 import org.mgd.utils.DataUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @author mgd [maoguidong@standard-robots.com]
  * @data 2022/6/29 下午4:46
  */
-final public class McRequest extends McMessage {
+public abstract class McRequest<T> extends McMessage{
     private McResponse response;
     /**
      * 起始软元件地址
@@ -34,7 +34,7 @@ final public class McRequest extends McMessage {
      */
     private int quantity;
 
-    public McRequest(McResponse response, int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, RequestCommandEnum requestCommand, int quantity) {
+    McRequest(McResponse response, int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, RequestCommandEnum requestCommand,int quantity,byte[] softPoint,byte[] value) {
         super(Mc.FRAME_HEADER_3E_REQUEST,
                 Mc.FRAME_ADDRESS_3E_4E_NETWORK_NO,
                 Mc.FRAME_ADDRESS_3E_4E_CONTROLLER_NO,
@@ -45,29 +45,7 @@ final public class McRequest extends McMessage {
                 null,
                 DataUtils.byteResolve(startAddress, 3),
                 SoftUnitCodeEnum.REGISTER_DATA.getCode(),
-                DataUtils.byteResolve(quantity, 2)
-                , null, null, null, null
-        );
-        this.response = response;
-        this.startAddress = startAddress;
-        this.waitRespTimeOut = waitRespTimeOut;
-        this.waitTimeOutUnit = waitTimeOutUnit;
-        this.requestCommand = requestCommand;
-        this.quantity = quantity;
-    }
-
-    public McRequest(McResponse response, int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, RequestCommandEnum requestCommand,int quantity,byte[] value) {
-        super(Mc.FRAME_HEADER_3E_REQUEST,
-                Mc.FRAME_ADDRESS_3E_4E_NETWORK_NO,
-                Mc.FRAME_ADDRESS_3E_4E_CONTROLLER_NO,
-                Mc.FRAME_ADDRESS_3E_4E_DEST_MODULE_NO,
-                Mc.FRAME_ADDRESS_3E_4E_DEST_MODULE_STATION,
-                Mc.FRAME_WATCHER_TIMER,
-                requestCommand.getCode(),
-                null,
-                DataUtils.byteResolve(startAddress, 3),
-                SoftUnitCodeEnum.REGISTER_DATA.getCode(),
-                DataUtils.byteResolve(quantity, 2)
+                softPoint
                 , value, null, null, null
         );
         this.response = response;
@@ -78,32 +56,7 @@ final public class McRequest extends McMessage {
         this.quantity = quantity;
     }
 
-    /**
-     * 字单位批量写入
-     *
-     * @return
-     */
-    public static McRequest writeWord(int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, byte[] value) {
-        ByteArrayOutputStream dataArr = new ByteArrayOutputStream();
-        for (byte b : value) {
-            byte[] bytesa = DataUtils.byteResolve(b, 2);
-            try {
-                dataArr.write(bytesa);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return new McRequest(new McResponse(), startAddress, waitRespTimeOut, waitTimeOutUnit, RequestCommandEnum.BATCH_WRITE_BY_WORD, value.length,dataArr.toByteArray());
-    }
 
-    /**
-     * 字单位批量读取
-     *
-     * @return
-     */
-    public static McRequest readWord(int startAddress, int waitRespTimeOut, TimeUnit waitTimeOutUnit, int quantity) {
-        return new McRequest(new McResponse(), startAddress, waitRespTimeOut, waitTimeOutUnit, RequestCommandEnum.BATCH_READ_BY_WORD, quantity);
-    }
 
     public McResponse getResponse() {
         return response;

@@ -1,4 +1,5 @@
 import org.mgd.data.McMessage;
+import org.mgd.data.enums.WordLengthEnum;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -10,7 +11,13 @@ import java.net.Socket;
 public class McTest {
     public static void main(String[] args) throws IOException {
         Socket socket = new Socket("10.10.68.72", 5002);
-        McMessage mcMessage = new McMessage(){};
+        McMessage mcMessage = new McMessage(){
+
+            @Override
+            public WordLengthEnum getWordLength() {
+                return null;
+            }
+        };
         mcMessage.setFRAME_HEADER(new byte[]{0x50,00})
                 .setFRAME_ADDRESS_NETWORK_NO(new byte[]{00})
                 .setFRAME_ADDRESS_CONTROLLER_NO(new byte[]{(byte) 0XFF})

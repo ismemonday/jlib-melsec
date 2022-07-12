@@ -1,6 +1,7 @@
 package org.mgd.data;
 
 /**
+ * 消息
  * @author mgd [maoguidong@standard-robots.com]
  * @data 2022/7/8 下午6:00
  */

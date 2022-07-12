@@ -1,12 +1,11 @@
 package org.mgd.master;
 
-import org.mgd.data.DataFrame;
+import org.mgd.data.enums.DataFrame;
 import org.mgd.data.McConnectParams;
-import org.mgd.data.McRequest;
-import org.mgd.data.McResponse;
+import org.mgd.data.request.McRequest;
+import org.mgd.data.response.McResponse;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 
 /**
